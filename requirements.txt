@@ -1,0 +1,7 @@
+fastapi[standard]==0.116.0
+black==25.1.0
+pytest==8.4.1
+coverage==7.9.2
+pytest-cov==6.2.1
+pre-commit
+ruff
