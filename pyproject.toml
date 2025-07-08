@@ -1,6 +1,8 @@
 [tool.ruff]
 line-length = 100
 lint.ignore = ["D203"]
+format.quote-style = "single"
+format.indent-style = "tab"
 
 [tool.black]
 line-length = 100

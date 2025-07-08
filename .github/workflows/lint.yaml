@@ -16,7 +16,8 @@ jobs:
             pip install -r requirements.txt
         - name: Lint with ruff
           run: |
-            ruff check --fix --select=E9,F63,F7,F82 --exit-zero
+            ruff check --select=E9,F63,F7,F82,I --fix --exit-zero
+            ruff format
         - name: Check formatting with black
           uses: psf/black@stable
           with:
