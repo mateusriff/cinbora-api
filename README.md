@@ -10,9 +10,15 @@ REST API for a college project.
 ## Setup
 
 First setup the repo using:
+1. Ubuntu:
 ```bash
 $ chmod +x ./setup.sh
 $ sudo ./setup.sh
+```
+
+2. Windows:
+```powershell
+> .\setup.bat
 ```
 
 ## Running App
