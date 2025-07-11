@@ -4,7 +4,11 @@ from sqlmodel import SQLModel, Session, create_engine
 from dotenv import load_dotenv
 import os
 
+<<<<<<< HEAD
 load_dotenv("compose/.env")
+=======
+load_dotenv()
+>>>>>>> 71d5fd1 (feat: adds database.py)
 
 POSTGRES_USER = os.getenv("POSTGRES_USER")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
