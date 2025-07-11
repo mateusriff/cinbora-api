@@ -7,3 +7,4 @@ starlette==0.46.2
 starlette-prometheus==0.10.0
 pre-commit
 ruff
+alembic==1.16.3

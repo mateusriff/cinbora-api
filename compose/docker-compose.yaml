@@ -10,7 +10,7 @@ services:
     restart: always
     networks:
       - app-network
-  test-db:
+  db:
     image: postgres:17.5
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -56,4 +56,3 @@ volumes:
 networks:
   app-network:
     driver: bridge
-    
