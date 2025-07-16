@@ -2,6 +2,9 @@ import uvicorn
 from fastapi import FastAPI
 from starlette_prometheus import PrometheusMiddleware, metrics
 
+from app.routes.feedback import router as feedback_router
+from app.database import create_db_and_tables
+
 
 swagger_ui_parameters = {
     "docExpansion": "none",
@@ -19,6 +22,10 @@ app = FastAPI(
     swagger_ui_parameters=swagger_ui_parameters,
 )
 
+@app.on_event("startup")
+def on_startup():
+    create_db_and_tables()
+
 app.add_middleware(PrometheusMiddleware)
 app.add_route("/metrics", metrics)
 
@@ -26,6 +33,7 @@ app.add_route("/metrics", metrics)
 async def root():
     return {"message": "Hello World"}
 
+app.include_router(feedback_router, prefix="/feedback", tags=["Feedback"])
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="critical")

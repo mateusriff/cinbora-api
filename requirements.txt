@@ -8,3 +8,5 @@ starlette-prometheus==0.10.0
 pre-commit
 ruff
 alembic==1.16.3
+sqlmodel==0.0.24
+psycopg2-binary==2.9.10
