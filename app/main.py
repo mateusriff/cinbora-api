@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from starlette_prometheus import PrometheusMiddleware, metrics
 
 from app.routes.user import router as user_router
+from app.routes.auth import router as auth_router
 
 
 swagger_ui_parameters = {
@@ -28,6 +29,7 @@ app.add_route("/metrics", metrics)
 async def root():
     return {"message": "Hello World"}
 
+app.include_router(auth_router, prefix="/auth", tags=["Auth"])
 app.include_router(user_router, prefix="/users", tags=["Users"])
 
 if __name__ == "__main__":

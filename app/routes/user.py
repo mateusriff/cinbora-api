@@ -1,10 +1,12 @@
+from typing import Annotated, Any, Dict
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from uuid import uuid4
 
+from app.database import get_session
 from app.models.user import User, UserPatch
 from app.types.user import UserCreate, UserResponse
-from app.database import get_session
+from app.routes.auth import login
 
 router = APIRouter()
 
@@ -21,8 +23,7 @@ def create_user(user: UserCreate, session: Session = Depends(get_session)):
     return response
 
 @router.get("/", response_model=list[UserResponse])
-def list_users(session: Session = Depends(get_session)):
-
+def list_users(user: Dict[str, Any] = Depends(login), session: Session = Depends(get_session)):
     users = session.exec(select(User)).all()
     return [UserResponse(**user.model_dump()) for user in users]
 
@@ -39,7 +40,7 @@ def get_user(user_id: int, session: Session = Depends(get_session)):
 
 
 @router.patch("/{user_id}")
-def update_user(user_id: int, data: UserPatch, session: Session = Depends(get_session)):
+def update_user(user_id: int, data: UserPatch, user: Dict[str, Any] = Depends(login), session: Session = Depends(get_session)):
 
     user = session.exec(select(User).where(User.id == user_id)).first()
 
@@ -59,7 +60,7 @@ def update_user(user_id: int, data: UserPatch, session: Session = Depends(get_se
 
 
 @router.delete("/{user_id}")
-def delete_user(user_id: int, session: Session = Depends(get_session)):
+def delete_user(user_id: int, user: Dict[str, Any] = Depends(login), session: Session = Depends(get_session)):
 
     user = session.exec(select(User).where(User.id == user_id)).first()
 
