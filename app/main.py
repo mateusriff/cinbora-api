@@ -4,6 +4,7 @@ from starlette_prometheus import PrometheusMiddleware, metrics
 
 from app.routes.user import router as user_router
 from app.routes.travel import router as travel_router
+from app.database import create_db_and_tables
 
 
 swagger_ui_parameters = {
@@ -22,6 +23,10 @@ app = FastAPI(
     swagger_ui_parameters=swagger_ui_parameters,
 )
 
+@app.on_event("startup")
+def on_startup():
+    create_db_and_tables()
+    
 app.add_middleware(PrometheusMiddleware)
 app.add_route("/metrics", metrics)
 

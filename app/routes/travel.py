@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from uuid import uuid4
 
+from app.models.user import User
 from app.models.travel import Travel, TravelPatch
 from app.types.travel import TravelCreate, TravelResponse
 from app.database import get_session
@@ -9,9 +10,14 @@ from app.database import get_session
 router = APIRouter()
 
 @router.post("/")
-def create_user(travel: TravelCreate, session: Session = Depends(get_session)):
+def create_travel(travel: TravelCreate, session: Session = Depends(get_session)):
 
     new_travel = Travel(**travel.model_dump(), id=str(uuid4()))
+
+    user = session.exec(select(User).where(User.id == travel.id_driver)).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Driver not found")
+    
     session.add(new_travel)
     session.commit()
     session.refresh(new_travel)
@@ -20,13 +26,13 @@ def create_user(travel: TravelCreate, session: Session = Depends(get_session)):
     return response
 
 @router.get("/", response_model=list[TravelResponse])
-def list_users(session: Session = Depends(get_session)):
+def list_travels(session: Session = Depends(get_session)):
 
     travels = session.exec(select(Travel)).all()
     return [TravelResponse(**travel.model_dump()) for travel in travels]
 
 @router.get("/{travel_id}")
-def get_user(travel_id: int, session: Session = Depends(get_session)):
+def get_travel(travel_id: str, session: Session = Depends(get_session)):
 
     travel = session.exec(select(Travel).where(Travel.id == travel_id)).first()
 
@@ -36,7 +42,7 @@ def get_user(travel_id: int, session: Session = Depends(get_session)):
     return travel
 
 @router.patch("/{travel_id}")
-def update_travel(travel_id: int, data: TravelPatch, session: Session = Depends(get_session)):
+def update_travel(travel_id: str, data: TravelPatch, session: Session = Depends(get_session)):
 
     travel = session.exec(select(Travel).where(Travel.id == travel_id)).first()
 
@@ -55,7 +61,7 @@ def update_travel(travel_id: int, data: TravelPatch, session: Session = Depends(
     return travel
 
 @router.delete("/{travel_id}")
-def delete_travel(travel_id: int, session: Session = Depends(get_session)):
+def delete_travel(travel_id: str, session: Session = Depends(get_session)):
 
     travel = session.exec(select(Travel).where(Travel.id == travel_id)).first()
 

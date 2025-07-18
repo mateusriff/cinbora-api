@@ -7,7 +7,7 @@ from app.models.base import BaseModel
 class Travel(BaseModel, table=True):
 
     id: str = Field(default=None, primary_key=True)
-    id_driver: str = Field(foreign_key="travel.id")
+    id_driver: str = Field(foreign_key="user.id")
     origin: str = Field()
     destination: str = Field()
     price: float = Field()
