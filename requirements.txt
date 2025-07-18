@@ -8,6 +8,8 @@ starlette-prometheus==0.10.0
 sqlmodel==0.0.24
 psycopg2-binary==2.9.10
 alembic==1.12.1
+python-jose==3.5.0
+boto3==1.39.4
 pre-commit
 ruff
 sqlmodel==0.0.24

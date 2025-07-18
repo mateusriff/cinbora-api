@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from typing import Annotated, Any, Dict
 from sqlmodel import Session, select
 from datetime import datetime
 from uuid import uuid4
@@ -7,6 +8,7 @@ from app.models.user import User
 from app.types.user import UserCreate, UserResponse, UserPatch
 from app.database import get_session
 from app.utils import upload_user_photo, delete_user_photo
+from app.routes.auth import login
 
 router = APIRouter()
 
@@ -33,8 +35,7 @@ async def create_user(
     return UserResponse(**new_user.model_dump())
 
 @router.get("/", response_model=list[UserResponse])
-def list_users(session: Session = Depends(get_session)):
-
+def list_users(user: Dict[str, Any] = Depends(login), session: Session = Depends(get_session)):
     users = session.exec(select(User)).all()
     return [UserResponse(**user.model_dump()) for user in users]
 
