@@ -1,4 +1,4 @@
 from .user import User as User, UserPatch as UserPatch
-from .travel import Travel as Travel, TravelPatch as TravelPatch
+from .travel import Travel as Travel
 
-_all_ = ["User", "UserPatch", "Travel", "TravelPatch"]
+_all_ = ["User", "UserPatch", "Travel"]
