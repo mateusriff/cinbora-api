@@ -11,7 +11,7 @@ class Address(BaseModel):
 
 class AddressCreate(BaseModel):
 
-    address: str = Field(..., title="Origin Address", description="The starting address for the route")
+    address: str = Field(..., title="Address", description="The address for the route")
 
 class AddressResponse(Address):
 
@@ -20,3 +20,8 @@ class AddressResponse(Address):
     latitude: float
     longitude: float
     created_at: datetime
+
+class AddressUpdate(BaseModel):
+
+    address : str = Field(None, title="Address", description="The address for the route")
+    updated_at: datetime = Field(default_factory=datetime.now, title="Update Timestamp", description="Timestamp when the address was last updated")
