@@ -1,5 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, Field
+from typing import Optional, List
 
 class Location(BaseModel):
     latitude: float
@@ -12,6 +13,7 @@ class Travel(BaseModel):
     id_driver: str = Field(..., title="Driver ID", description="Unique identifier for the driver")
     origin: Location = Field(..., title="Origin", description="Origin of the travel")
     destination: Location = Field(..., title="Destination", description="Destination of the travel")
+    days_of_week:  Optional[List[str]] = Field(None, title="Days of Week", description="Days of week when the travel repeats")
     price: float = Field(..., title="Travel Price", description="Price of the travel")
     available_seats: int = Field(
         None, title="Available Seats", description="Seats available in the vehicle"
@@ -30,6 +32,7 @@ class TravelPatch(BaseModel):
 
     origin: Location = Field(None, title="Origin", description="Origin of the travel")
     destination: Location = Field(None, title="Destination", description="Destination of the travel")
+    days_of_week:  Optional[List[str]] = Field(None, title="Days of Week", description="Days of week when the travel repeats")
     price: float = Field(None, title="Travel Price", description="Price of the travel")
     available_seats: int = Field(None, title="Available Seats", description="Seats available in the vehicle")
     status: str = Field(None, title="Travel Staus", description="Status of the travel(empty, full, etc)")
@@ -42,6 +45,7 @@ class TravelCreate(BaseModel):
     id_driver: str
     origin: Location
     destination: Location
+    days_of_week:  Optional[List[str]]
     price: float
     available_seats: int = None
     status: str = None
@@ -55,6 +59,7 @@ class TravelResponse(BaseModel):
     id_driver: str
     origin: Location
     destination: Location
+    days_of_week:  Optional[List[str]]
     price: float
     available_seats: int = None
     status: str = None

@@ -28,7 +28,7 @@ def list_users(session: Session = Depends(get_session)):
 
 
 @router.get("/{user_id}")
-def get_user(user_id: int, session: Session = Depends(get_session)):
+def get_user(user_id: str, session: Session = Depends(get_session)):
 
     user = session.exec(select(User).where(User.id == user_id)).first()
 
@@ -39,7 +39,7 @@ def get_user(user_id: int, session: Session = Depends(get_session)):
 
 
 @router.patch("/{user_id}")
-def update_user(user_id: int, data: UserPatch, session: Session = Depends(get_session)):
+def update_user(user_id: str, data: UserPatch, session: Session = Depends(get_session)):
 
     user = session.exec(select(User).where(User.id == user_id)).first()
 
@@ -59,7 +59,7 @@ def update_user(user_id: int, data: UserPatch, session: Session = Depends(get_se
 
 
 @router.delete("/{user_id}")
-def delete_user(user_id: int, session: Session = Depends(get_session)):
+def delete_user(user_id: str, session: Session = Depends(get_session)):
 
     user = session.exec(select(User).where(User.id == user_id)).first()
 

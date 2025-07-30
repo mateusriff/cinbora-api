@@ -1,5 +1,6 @@
-from typing import Dict
-from sqlmodel import Field, Column, JSON
+from typing import Optional, List
+from sqlmodel import Field, Column, JSON, String
+from sqlalchemy.dialects.postgresql import ARRAY
 from datetime import datetime
 from app.types.travel import Location
 
@@ -13,7 +14,7 @@ class Travel(BaseModel, table=True):
 
     origin: Location = Field(default_factory=dict, sa_column=Column(JSON))
     destination: Location = Field(default_factory=dict, sa_column=Column(JSON))
-
+    days_of_week: Optional[List[str]] = Field(sa_column=Column(ARRAY(String)))
     price: float = Field()
     available_seats: int = Field()
     status: str
