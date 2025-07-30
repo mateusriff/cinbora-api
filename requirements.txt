@@ -11,3 +11,4 @@ alembic==1.12.1
 pre-commit
 ruff
 sqlmodel==0.0.24
+boto3
