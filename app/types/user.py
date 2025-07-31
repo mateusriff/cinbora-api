@@ -1,3 +1,4 @@
+from fastapi import UploadFile, File
 from datetime import datetime
 from pydantic import BaseModel, Field
 
@@ -29,7 +30,7 @@ class UserCreate(BaseModel):
     name: str
     email: str
     phone: str
-    photo: str = None
+    photo_file: UploadFile = File()
     gender: str = None
 
 class UserResponse(BaseModel):

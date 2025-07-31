@@ -28,9 +28,35 @@ REGION_NAME = os.getenv("REGION_NAME")
 BUCKET_NAME = os.getenv("BUCKET_NAME")
 
 @router.post("/")
-def create_user(user: UserCreate, session: Session = Depends(get_session)):
+async def create_user(user: UserCreate, session: Session = Depends(get_session)):
 
-    new_user = User(**user.model_dump(), id=str(uuid4()), score=5.0)
+    user_id = str(uuid4())
+
+    if user.photo_file.content_type not in ["image/png", "image/jpeg"]:
+        raise HTTPException(status_code=400, detail="Formato de imagem inválido")
+
+    filename = f"users/user_{user_id}.png"
+    contents = await user.photo_file.read()
+
+    try:
+        s3.upload_fileobj(
+            Fileobj=BytesIO(contents),
+            Bucket=BUCKET_NAME,
+            Key=filename,
+            ExtraArgs={"ContentType": user.photo_file.content_type}
+        )
+
+        url = f"https://{BUCKET_NAME}.s3.{REGION_NAME}.amazonaws.com/{filename}"
+        #return {"message": "Upload concluído com sucesso", "url": url}
+
+    except NoCredentialsError:
+        raise HTTPException(status_code=403, detail="Credenciais da AWS não encontradas")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao fazer upload: {str(e)}")
+    
+    new_user = User(**user.model_dump(), id=user_id, score=5.0)
+    new_user.photo = url
+
     session.add(new_user)
     session.commit()
     session.refresh(new_user)
@@ -89,7 +115,7 @@ def delete_user(user_id: str, session: Session = Depends(get_session)):
 
     return {"message": "User deleted successfully"}
 
-@router.post("/{user_id}/upload-photo")
+#@router.post("/{user_id}/upload-photo")
 async def upload_user_photo(user_id: str, file: UploadFile = File(...)):
 
     if file.content_type not in ["image/png", "image/jpeg"]:
