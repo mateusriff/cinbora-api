@@ -1,6 +1,7 @@
-from fastapi import UploadFile, File
+from fastapi import UploadFile, File, Form
 from datetime import datetime
 from pydantic import BaseModel, Field
+from typing import Optional
 
 class User(BaseModel):
     """User model for the application."""
@@ -16,13 +17,20 @@ class User(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.now)
 
 class UserPatch(BaseModel):
-    """Model for patching user data."""
-    
-    name: str = Field(None, title="User Name", description="Name of the user")
-    email: str = Field(None, title="User Email", description="Email address of the user")
-    phone: str = Field(None, title="User Phone", description="Phone number of the user")
-    photo: str = Field(None, title="User Photo", description="URL of the user's photo")
-    updated_at: datetime = Field(default_factory=datetime.now)
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    gender: Optional[str] = None
+
+    @classmethod
+    def as_form(
+        cls,
+        name: Optional[str] = Form(None),
+        email: Optional[str] = Form(None),
+        phone: Optional[str] = Form(None),
+        gender: Optional[str] = Form(None),
+    ):
+        return cls(name=name, email=email, phone=phone, gender=gender)
 
 class UserCreate(BaseModel):
     """Model for creating a new user."""
@@ -30,8 +38,7 @@ class UserCreate(BaseModel):
     name: str
     email: str
     phone: str
-    photo_file: UploadFile = File()
-    gender: str = None
+    gender: str
 
 class UserResponse(BaseModel):
     """Response model for user data."""

@@ -17,13 +17,3 @@ class User(BaseModel, table=True):
     score: float
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
-
-
-class UserPatch(BaseModel):
-
-    name: Union[str, None] = None
-    email: Union[str, None] = None
-    phone: Union[str, None] = None
-    photo: Union[str, None] = None
-    gender: Union[str, None] = None
-    updated_at: datetime = Field(default_factory=datetime.now)

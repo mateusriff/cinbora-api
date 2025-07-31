@@ -1,4 +1,23 @@
 import math
+from fastapi import HTTPException
+import boto3
+from botocore.exceptions import NoCredentialsError
+import os
+from dotenv import load_dotenv
+from io import BytesIO
+
+load_dotenv("compose/.env")
+
+s3 = boto3.client(
+    's3',
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+    aws_session_token=os.getenv("AWS_SESSION_TOKEN"),
+    region_name=os.getenv("REGION_NAME")
+)
+
+REGION_NAME = os.getenv("REGION_NAME")
+BUCKET_NAME = os.getenv("BUCKET_NAME")
 
 def haversine_distance(coord1, coord2):
     """
@@ -32,3 +51,35 @@ def haversine_distance(coord1, coord2):
 
     distance = R * c
     return distance
+
+def upload_user_photo(user_id, file):
+
+    if file.content_type not in ["image/png", "image/jpeg"]:
+        raise HTTPException(status_code=400, detail="Formato de imagem inválido")
+
+    filename = f"users/user_{user_id}.png"
+
+    try:
+        contents = file.file.read()
+        s3.upload_fileobj(
+            Fileobj=BytesIO(contents),
+            Bucket=BUCKET_NAME,
+            Key=filename,
+            ExtraArgs={"ContentType": file.content_type}
+        )
+
+        url = f"https://{BUCKET_NAME}.s3.{REGION_NAME}.amazonaws.com/{filename}"
+        return url
+
+    except NoCredentialsError:
+        raise HTTPException(status_code=403, detail="Credenciais da AWS não encontradas")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao fazer upload: {str(e)}")
+
+def delete_user_photo(user_id: str):
+    filename = f"users/user_{user_id}.png"
+
+    try:
+        s3.delete_object(Bucket=BUCKET_NAME, Key=filename)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao deletar foto: {str(e)}")
