@@ -34,6 +34,7 @@ app.add_route("/metrics", metrics)
 async def root():
     return {"message": "Hello World"}
 
+app.include_router(auth_router, prefix="/auth", tags=["Auth"])
 app.include_router(user_router, prefix="/users", tags=["Users"])
 app.include_router(travel_router, prefix="/travel", tags=["Travel"])
 

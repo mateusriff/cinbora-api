@@ -3,9 +3,10 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 from typing import Optional
 
+
 class User(BaseModel):
     """User model for the application."""
-    
+
     id: str = Field(..., title="User ID", description="Unique identifier for the user")
     name: str = Field(..., title="User Name", description="Name of the user")
     email: str = Field(..., title="User Email", description="Email address of the user")
@@ -15,6 +16,7 @@ class User(BaseModel):
     score: float = Field(None, title="User Score", description="Score of the user")
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
+
 
 class UserPatch(BaseModel):
     name: Optional[str] = None
@@ -34,15 +36,17 @@ class UserPatch(BaseModel):
 
 class UserCreate(BaseModel):
     """Model for creating a new user."""
-    
+
     name: str
+    password: str
     email: str
     phone: str
     gender: str
 
+
 class UserResponse(BaseModel):
     """Response model for user data."""
-    
+
     id: str
     name: str
     email: str
