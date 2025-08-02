@@ -13,23 +13,22 @@ def get_auth_secrets() -> Dict[str, str]:
     # Create a Secrets Manager client
     session = boto3.session.Session()
     client = session.client(
-        service_name='secretsmanager',
-        region_name=region_name
+        service_name="secretsmanager",
+        region_name=region_name,
     )
 
     try:
-        get_secret_value_response = client.get_secret_value(
-            SecretId=secret_name
-        )
+        get_secret_value_response = client.get_secret_value(SecretId=secret_name)
+
     except ClientError as e:
         raise e
 
-    return get_secret_value_response['SecretString']
+    return get_secret_value_response["SecretString"]
 
 
 class AuthBearer(OAuth2PasswordBearer):
     def __init__(self):
-        url = get_auth_secrets()['domain_url']
+        url = get_auth_secrets()["domain_url"]
         super().__init__(tokenUrl=url)
 
 
