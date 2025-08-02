@@ -1,11 +1,14 @@
 import os
 import requests
+import boto3
 from jose import jwt
 from jose.exceptions import JOSEError
 from typing import Any, Dict
 from fastapi import Depends, HTTPException
 
 from app.utils.auth_utils import auth_bearer, get_auth_secrets
+from app.types.user import UserCreate
+from app.models.user import User
 
 
 def get_jwks():
@@ -76,3 +79,36 @@ async def login(token: str = Depends(auth_bearer)) -> Dict[str, Any]:
             status_code=500,
             detail="An unexpected error occurred",
         )
+
+
+def create_user_cognito(user: UserCreate, db_user: User):
+    cognito_client = boto3.client("cognito-idp")
+    try:
+        cognito_client.admin_create_user(
+            UserPoolId=get_auth_secrets()["user_pool_id"],
+            Username=user.email,
+            UserAttributes=[
+                {
+                    "Name": "phone_number",
+                    "Value": user.phone,
+                },
+                {
+                    "Name": "email",
+                    "Value": user.email,
+                },
+                {
+                    "Name": "given_name",
+                    "Value": user.name,
+                },
+            ],
+            ValidationData=[
+                {
+                    "Name": "email",
+                    "Value": user.email,
+                },
+            ],
+            MessageAction="SUPPRESS",
+            DesiredDeliveryMediums=["EMAIL"],
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

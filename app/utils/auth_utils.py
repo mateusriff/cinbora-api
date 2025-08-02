@@ -1,7 +1,9 @@
 import os
+import boto3
+import json
+
 from typing import Dict, List, Optional
 
-import boto3
 from botocore.exceptions import ClientError
 from fastapi.security import OAuth2PasswordBearer
 
@@ -23,7 +25,7 @@ def get_auth_secrets() -> Dict[str, str]:
     except ClientError as e:
         raise e
 
-    return get_secret_value_response["SecretString"]
+    return json.loads(get_secret_value_response["SecretString"])
 
 
 class AuthBearer(OAuth2PasswordBearer):

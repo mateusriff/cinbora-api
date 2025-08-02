@@ -8,7 +8,7 @@ from app.models.user import User
 from app.types.user import UserCreate, UserResponse, UserPatch
 from app.database import get_session
 from app.utils import upload_user_photo, delete_user_photo
-from app.routes.auth import login
+from app.routes.auth import login, create_user_cognito
 
 router = APIRouter()
 
@@ -33,6 +33,7 @@ async def create_user(
     session.refresh(new_user)
 
     return UserResponse(**new_user.model_dump())
+
 
 @router.get("/", response_model=list[UserResponse])
 def list_users(user: Dict[str, Any] = Depends(login), session: Session = Depends(get_session)):
