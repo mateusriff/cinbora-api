@@ -3,9 +3,12 @@ import boto3
 import json
 
 from typing import Dict, List, Optional
+from dotenv import load_dotenv
 
 from botocore.exceptions import ClientError
 from fastapi.security import OAuth2PasswordBearer
+
+load_dotenv("compose/.env")
 
 
 def get_auth_secrets() -> Dict[str, str]:

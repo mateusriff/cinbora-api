@@ -7,7 +7,7 @@ from uuid import uuid4
 from app.models.user import User
 from app.types.user import UserCreate, UserResponse, UserPatch
 from app.database import get_session
-from app.utils import upload_user_photo, delete_user_photo
+from app.utils.utils import upload_user_photo, delete_user_photo
 from app.routes.auth import login, create_user_cognito
 
 router = APIRouter()
@@ -15,13 +15,14 @@ router = APIRouter()
 @router.post("/")
 async def create_user(
     name: str = Form(...),
+    password: str = Form(...),
     email: str = Form(...),
     phone: str = Form(...),
     gender: str = Form(None),
     file: UploadFile = File(...),
     session: Session = Depends(get_session)
 ):
-    user = UserCreate(name=name, email=email, phone=phone, gender=gender)
+    user = UserCreate(name=name, password=password, email=email, phone=phone, gender=gender)
     user_id = str(uuid4())
 
     url = upload_user_photo(user_id, file)

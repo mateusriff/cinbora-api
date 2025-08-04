@@ -7,7 +7,7 @@ from app.models.travel import Travel
 from app.types.travel import TravelCreate, TravelResponse, TravelPatch
 from app.database import get_session
 
-from app.utils import haversine_distance
+from app.utils.utils import haversine_distance
 
 router = APIRouter()
 
@@ -28,30 +28,42 @@ def create_travel(travel: TravelCreate, session: Session = Depends(get_session))
     return response
 
 @router.get("/", response_model=list[TravelResponse])
-def list_travels(origin_latitude: float = None, origin_longitude: float = None, destination_latitude: float = None, destination_longitude: float = None, session: Session = Depends(get_session)):
+def list_travels(
+    origin_latitude: float,
+    origin_longitude: float,
+    destination_latitude: float,
+    destination_longitude: float,
+    radius: int,
+    session: Session = Depends(get_session)
+):
 
-    if (origin_latitude and not origin_longitude) or (not origin_latitude and origin_longitude):
+    if(not origin_latitude and not origin_longitude):
+        raise HTTPException(status_code=400, detail="Both origin latitude and longitude required")
+    
+    if(not destination_latitude and not destination_longitude):
         raise HTTPException(status_code=400, detail="Both latitude and longitude required")
-    elif not (origin_latitude and origin_longitude):
-        travels = session.exec(select(Travel)).all()
+    
+    travels = session.exec(select(Travel)).all()
+
+    if origin_latitude is None and origin_longitude is None and destination_latitude is None and destination_longitude is None:
         return [TravelResponse(**travel.model_dump()) for travel in travels]
-    else:
-        travels = session.exec(select(Travel)).all()
+    
+    travels = session.exec(select(Travel)).all()
 
-        filtered_travels = [
-            travel for travel in travels
-            if haversine_distance(
-                (travel.origin["longitude"], travel.origin["latitude"]),
-                (origin_longitude, origin_latitude)
-            ) <= 3000
-            and 
-            haversine_distance(
-                (travel.destination["longitude"], travel.destination["latitude"]),
-                (destination_longitude, destination_latitude)
-            ) <= 3000
-        ]
+    filtered_travels = [
+        travel for travel in travels
+        if haversine_distance(
+            (travel.origin["longitude"], travel.origin["latitude"]),
+            (origin_longitude, origin_latitude)
+        ) <= radius
+        and 
+        haversine_distance(
+            (travel.destination["longitude"], travel.destination["latitude"]),
+            (destination_longitude, destination_latitude)
+        ) <= radius
+    ]
 
-        return filtered_travels
+    return filtered_travels
         
 @router.get("/{travel_id}")
 def get_travel(travel_id: str, session: Session = Depends(get_session)):
