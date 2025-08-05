@@ -1,15 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
-from typing import Annotated, Any, Dict
-from sqlmodel import Session, select
 from datetime import datetime
+from typing import Annotated, Any, Dict
 from uuid import uuid4
 
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from sqlmodel import Session, select
+
+from app.database import get_session
 from app.models.user import User
 from app.types.auth import JWTAuthCredentials
-from app.types.user import UserCreate, UserResponse, UserPatch
-from app.database import get_session
-from app.utils.utils import upload_user_photo, delete_user_photo
-from app.utils.auth_utils import create_user_cognito, auth_bearer
+from app.types.user import UserCreate, UserPatch, UserResponse
+from app.utils.auth_utils import auth_bearer, create_user_cognito
+from app.utils.utils import delete_user_photo, upload_user_photo
 
 router = APIRouter()
 
@@ -24,18 +25,28 @@ async def create_user(
     file: UploadFile = File(...),
     session: Session = Depends(get_session),
 ):
-    user = UserCreate(name=name, password=password, email=email, phone=phone, gender=gender)
-    user_id = str(uuid4())
+    try:
+        user = UserCreate(
+            name=name,
+            password=password,
+            email=email,
+            phone=phone,
+            gender=gender,
+        )
+        user_id = str(uuid4())
 
-    url = upload_user_photo(user_id, file)
+        url = upload_user_photo(user_id, file)
 
-    new_user = User(**user.model_dump(), photo=url, id=user_id, score=5.0)
+        new_user = User(**user.model_dump(), photo=url, id=user_id, score=5.0)
 
-    session.add(new_user)
-    session.commit()
-    session.refresh(new_user)
+        session.add(new_user)
+        session.commit()
+        session.refresh(new_user)
 
-    _ = create_user_cognito(user, new_user)
+        _ = create_user_cognito(user, new_user)
+    except Exception as error:
+        print(error)
+        return error
 
     return UserResponse(**new_user.model_dump())
 

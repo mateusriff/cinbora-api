@@ -1,7 +1,8 @@
-from fastapi import UploadFile, File, Form
 from datetime import datetime
-from pydantic import BaseModel, Field
 from typing import Optional
+
+from fastapi import File, Form, UploadFile
+from pydantic import BaseModel, Field
 
 
 class User(BaseModel):
@@ -33,6 +34,7 @@ class UserPatch(BaseModel):
         gender: Optional[str] = Form(None),
     ):
         return cls(name=name, email=email, phone=phone, gender=gender)
+
 
 class UserCreate(BaseModel):
     """Model for creating a new user."""

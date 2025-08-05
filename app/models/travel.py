@@ -1,11 +1,11 @@
-from typing import Optional, List
-from sqlmodel import Field, Column, JSON, String
-from sqlalchemy.dialects.postgresql import ARRAY
 from datetime import datetime
-from app.types.travel import Location
+from typing import List, Optional
 
+from sqlalchemy.dialects.postgresql import ARRAY
+from sqlmodel import JSON, Column, Field, String
 
 from app.models.base import BaseModel
+from app.types.travel import Location
 
 
 class Travel(BaseModel, table=True):
@@ -21,5 +21,3 @@ class Travel(BaseModel, table=True):
     description: str = Field()
     start_time: datetime = Field()
     created_at: datetime = Field(default_factory=datetime.now)
-
-

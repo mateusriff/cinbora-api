@@ -1,15 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlmodel import Session, select
 from uuid import uuid4
 
-from app.models.user import User
-from app.models.travel import Travel
-from app.types.travel import TravelCreate, TravelResponse, TravelPatch
-from app.database import get_session
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlmodel import Session, select
 
+from app.database import get_session
+from app.models.travel import Travel
+from app.models.user import User
+from app.types.travel import TravelCreate, TravelPatch, TravelResponse
 from app.utils.utils import haversine_distance
 
 router = APIRouter()
+
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_travel(travel: TravelCreate, session: Session = Depends(get_session)):
@@ -19,13 +20,14 @@ def create_travel(travel: TravelCreate, session: Session = Depends(get_session))
     user = session.exec(select(User).where(User.id == travel.id_driver)).first()
     if not user:
         raise HTTPException(status_code=404, detail="Driver not found")
-    
+
     session.add(new_travel)
     session.commit()
     session.refresh(new_travel)
 
     response = TravelResponse(**new_travel.model_dump())
     return response
+
 
 @router.get("/", response_model=list[TravelResponse])
 def list_travels(
@@ -34,37 +36,45 @@ def list_travels(
     destination_latitude: float,
     destination_longitude: float,
     radius: int,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
 ):
 
-    if(not origin_latitude and not origin_longitude):
+    if not origin_latitude and not origin_longitude:
         raise HTTPException(status_code=400, detail="Both origin latitude and longitude required")
-    
-    if(not destination_latitude and not destination_longitude):
+
+    if not destination_latitude and not destination_longitude:
         raise HTTPException(status_code=400, detail="Both latitude and longitude required")
-    
+
     travels = session.exec(select(Travel)).all()
 
-    if origin_latitude is None and origin_longitude is None and destination_latitude is None and destination_longitude is None:
+    if (
+        origin_latitude is None
+        and origin_longitude is None
+        and destination_latitude is None
+        and destination_longitude is None
+    ):
         return [TravelResponse(**travel.model_dump()) for travel in travels]
-    
+
     travels = session.exec(select(Travel)).all()
 
     filtered_travels = [
-        travel for travel in travels
+        travel
+        for travel in travels
         if haversine_distance(
             (travel.origin["longitude"], travel.origin["latitude"]),
-            (origin_longitude, origin_latitude)
-        ) <= radius
-        and 
-        haversine_distance(
+            (origin_longitude, origin_latitude),
+        )
+        <= radius
+        and haversine_distance(
             (travel.destination["longitude"], travel.destination["latitude"]),
-            (destination_longitude, destination_latitude)
-        ) <= radius
+            (destination_longitude, destination_latitude),
+        )
+        <= radius
     ]
 
     return filtered_travels
-        
+
+
 @router.get("/{travel_id}")
 def get_travel(travel_id: str, session: Session = Depends(get_session)):
 
@@ -74,6 +84,7 @@ def get_travel(travel_id: str, session: Session = Depends(get_session)):
         raise HTTPException(status_code=404, detail="Travel not found")
 
     return travel
+
 
 @router.patch("/{travel_id}")
 def update_travel(travel_id: str, data: TravelPatch, session: Session = Depends(get_session)):
@@ -93,6 +104,7 @@ def update_travel(travel_id: str, data: TravelPatch, session: Session = Depends(
     session.refresh(travel)
 
     return travel
+
 
 @router.delete("/{travel_id}")
 def delete_travel(travel_id: str, session: Session = Depends(get_session)):

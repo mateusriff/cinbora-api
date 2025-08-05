@@ -1,8 +1,9 @@
-from typing import Annotated
-from fastapi import Depends
-from sqlmodel import SQLModel, Session, create_engine
-from dotenv import load_dotenv
 import os
+from typing import Annotated
+
+from dotenv import load_dotenv
+from fastapi import Depends
+from sqlmodel import Session, SQLModel, create_engine
 
 load_dotenv("compose/.env")
 

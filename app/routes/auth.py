@@ -1,14 +1,15 @@
 import os
-import boto3
 from typing import Any, Dict
-from fastapi import APIRouter, Form, Depends, HTTPException
+
+import boto3
+from fastapi import APIRouter, Depends, Form, HTTPException
 
 from app.types.auth import JWTAuthCredentials
 from app.utils.auth_utils import (
-    calc_secret,
-    get_auth_secrets,
-    get_auth_error_message,
     auth_bearer,
+    calc_secret,
+    get_auth_error_message,
+    get_auth_secrets,
 )
 
 router = APIRouter()

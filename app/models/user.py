@@ -1,7 +1,8 @@
-from fastapi import File
-from sqlmodel import SQLModel, Field
-from typing import Union
 from datetime import datetime
+from typing import Union
+
+from fastapi import File
+from sqlmodel import Field, SQLModel
 
 from app.models.base import BaseModel
 

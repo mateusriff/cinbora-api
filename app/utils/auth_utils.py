@@ -1,22 +1,22 @@
-import os
 import base64
-import boto3
-import json
-import requests
 import hashlib
 import hmac
+import json
+import os
+from typing import Any, Dict, Optional
 
-from typing import Dict, Any, Optional
-from jose import jwt, jwk, JWTError
-from jose.utils import base64url_decode
-from jose.exceptions import JOSEError
+import boto3
+import requests
 from botocore.exceptions import ClientError
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import HTTPException, Request
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import JWTError, jwk, jwt
+from jose.exceptions import JOSEError
+from jose.utils import base64url_decode
 
-from app.types.user import UserCreate
-from app.types.auth import JWKS, JWTAuthCredentials
 from app.models.user import User
+from app.types.auth import JWKS, JWTAuthCredentials
+from app.types.user import UserCreate
 
 
 def get_auth_error_message() -> str:
