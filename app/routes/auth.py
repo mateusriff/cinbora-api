@@ -24,16 +24,16 @@ def login(
         secret_hash = calc_secret(username=email)
 
         params = {
-            "AuthFlow": "USER_PASSWORD_AUTH",
-            "AuthParameters": {
-                "USERNAME": email,
-                "PASSWORD": password,
-                "SECRET_HASH": secret_hash,
-            },
-            "ClientId": get_auth_secrets()["client_id"],
+            "USERNAME": email,
+            "PASSWORD": password,
+            "SECRET_HASH": secret_hash,
         }
         cognito_client = boto3.session.Session().client("cognito-idp")
-        response = cognito_client.initiate_auth(**params)
+        response = cognito_client.initiate_auth(
+            AuthFlow="USER_PASSWORD_AUTH",
+            AuthParameters=params,
+            Client_id=get_auth_secrets()["client_id"],
+        )
     except Exception:
         return HTTPException(
             status_code=403,

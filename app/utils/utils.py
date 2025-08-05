@@ -21,6 +21,10 @@ REGION_NAME = os.getenv("AWS_DEFAULT_REGION")
 BUCKET_NAME = os.getenv("BUCKET_NAME")
 
 
+def format_phone_number(phone: str) -> str:
+    return f"+55{phone}"
+
+
 def haversine_distance(coord1, coord2):
     """
     Calculate the great-circle distance between two points

@@ -10,7 +10,7 @@ from app.models.user import User
 from app.types.auth import JWTAuthCredentials
 from app.types.user import UserCreate, UserPatch, UserResponse
 from app.utils.auth_utils import auth_bearer, create_user_cognito
-from app.utils.utils import delete_user_photo, upload_user_photo
+from app.utils.utils import delete_user_photo, format_phone_number, upload_user_photo
 
 router = APIRouter()
 
@@ -26,6 +26,7 @@ async def create_user(
     session: Session = Depends(get_session),
 ):
     try:
+        phone = format_phone_number(phone=phone)
         user = UserCreate(
             name=name,
             password=password,
