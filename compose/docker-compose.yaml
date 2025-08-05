@@ -2,6 +2,10 @@ services:
   app:
     build:
       context: ..
+      args:
+        - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+        - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+        - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
     command: fastapi dev app/main.py --host 0.0.0.0 --port 8000
     environment:
       - AWS_COGNITO_SECRET_NAME=${AWS_COGNITO_SECRET_NAME}
@@ -13,7 +17,6 @@ services:
       - POSTGRES_PORT=${POSTGRES_PORT}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
     volumes:
       - ..:/src
     ports:

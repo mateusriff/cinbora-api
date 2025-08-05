@@ -1,114 +1,92 @@
 import os
-import requests
 import boto3
-from jose import jwt
-from jose.exceptions import JOSEError
 from typing import Any, Dict
-from fastapi import Depends, HTTPException
+from fastapi import APIRouter, Form, Depends, HTTPException
 
-from app.utils.auth_utils import auth_bearer, get_auth_secrets
-from app.types.user import UserCreate
-from app.models.user import User
+from app.types.auth import JWTAuthCredentials
+from app.utils.auth_utils import (
+    calc_secret,
+    get_auth_secrets,
+    get_auth_error_message,
+    auth_bearer,
+)
+
+router = APIRouter()
 
 
-def get_jwks():
+@router.post("/login")
+def login(
+    email: str = Form(...),
+    password: str = Form(...),
+) -> Dict[str, Any]:
     try:
-        response = requests.get(get_auth_secrets()["jwks_url"])
-        response.raise_for_status()
-        return response.json()
-    except requests.RequestException:
-        raise HTTPException(
+        secret_hash = calc_secret(username=email)
+
+        params = {
+            "AuthFlow": "USER_PASSWORD_AUTH",
+            "AuthParameters": {
+                "USERNAME": email,
+                "PASSWORD": password,
+                "SECRET_HASH": secret_hash,
+            },
+            "ClientId": get_auth_secrets()["client_id"],
+        }
+        cognito_client = boto3.session.Session().client("cognito-idp")
+        response = cognito_client.initiate_auth(**params)
+    except Exception:
+        return HTTPException(
+            status_code=403,
+            detail=get_auth_error_message(),
+        )
+
+    return response
+
+
+@router.post("/logout")
+def logout(claims: JWTAuthCredentials = Depends(auth_bearer)):
+    try:
+        access_token = claims.jwt_token
+        cognito_client = boto3.session.Session().client("cognito-idp")
+        _ = cognito_client.global_sign_out(AccessToken=access_token)
+    except Exception:
+        return HTTPException(
             status_code=500,
-            detail="Error fetching JWKS",
+            detail="Could not log out.",
         )
+    return {"message": "Logged out successfully"}
 
 
-def get_public_key(token: str, jwk: Dict[str, Any]) -> Dict[str, Any]:
+@router.patch("/change_password")
+def change_password(
+    old_password: str = Form(...),
+    new_password: str = Form(...),
+    claims: JWTAuthCredentials = Depends(auth_bearer),
+):
     try:
-        headers = jwt.get_unverified_header(token)
-    except JOSEError:
-        raise HTTPException(
-            status_code=500,
-            detail="Invalid JWK format",
-        )
+        username = claims.claims["username"]
+        secret_hash = calc_secret(username=username)
+        auth_secrets = get_auth_secrets()
 
-    kid = headers.get("kid")
-    if not kid:
-        raise HTTPException(
-            status_code=400,
-            detail="Missing 'kid' in token header",
-        )
-
-    for key in jwk["keys"]:
-        if key["kid"] == kid:
-            return key
-
-    raise HTTPException(
-        status_code=403,
-        detail="Public key not found for the given 'kid'",
-    )
-
-
-async def login(token: str = Depends(auth_bearer)) -> Dict[str, Any]:
-    try:
-        jwks = get_jwks()
-        public_key = get_public_key(token, jwks)
-
-        decoded_token = jwt.decode(
-            token,
-            public_key,
-            algorithms=["RS256"],
-            audience=get_auth_secrets()["client_id"],
-            issuer=f"https://cognito-idp.{os.environ['AWS_DEFAULT_REGION']}.amazonaws.com/{get_auth_secrets()['user_pool_id']}",
-        )
-        return decoded_token
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(
-            status_code=401,
-            detail="Token has expired",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    except jwt.JWTClaimsError:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid claims",
-            headers={"WWW-Authenticate": "Bearer"},
+        params = {
+            "AuthFlow": "USER_PASSWORD_AUTH",
+            "AuthParameters": {
+                "USERNAME": username,
+                "PASSWORD": old_password,
+                "SECRET_HASH": secret_hash,
+            },
+            "ClientId": auth_secrets["client_id"],
+        }
+        cognito_client = boto3.session.Session().client("cognito-idp")
+        _ = cognito_client.initiate_auth(**params)
+        _ = cognito_client.set_user_password(
+            UserPoolId=auth_secrets["user_pool_id"],
+            Username=username,
+            Password=new_password,
+            Permanent=True,
         )
     except Exception:
-        raise HTTPException(
-            status_code=500,
-            detail="An unexpected error occurred",
+        return HTTPException(
+            status_code=403,
+            detail=get_auth_error_message(),
         )
-
-
-def create_user_cognito(user: UserCreate, db_user: User):
-    cognito_client = boto3.client("cognito-idp")
-    try:
-        cognito_client.admin_create_user(
-            UserPoolId=get_auth_secrets()["user_pool_id"],
-            Username=user.email,
-            UserAttributes=[
-                {
-                    "Name": "phone_number",
-                    "Value": user.phone,
-                },
-                {
-                    "Name": "email",
-                    "Value": user.email,
-                },
-                {
-                    "Name": "given_name",
-                    "Value": user.name,
-                },
-            ],
-            ValidationData=[
-                {
-                    "Name": "email",
-                    "Value": user.email,
-                },
-            ],
-            MessageAction="SUPPRESS",
-            DesiredDeliveryMediums=["EMAIL"],
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return {"message": "Password changed"}

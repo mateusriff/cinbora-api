@@ -5,12 +5,14 @@ from datetime import datetime
 from uuid import uuid4
 
 from app.models.user import User
+from app.types.auth import JWTAuthCredentials
 from app.types.user import UserCreate, UserResponse, UserPatch
 from app.database import get_session
 from app.utils.utils import upload_user_photo, delete_user_photo
-from app.routes.auth import login, create_user_cognito
+from app.utils.auth_utils import create_user_cognito, auth_bearer
 
 router = APIRouter()
+
 
 @router.post("/")
 async def create_user(
@@ -20,7 +22,7 @@ async def create_user(
     phone: str = Form(...),
     gender: str = Form(None),
     file: UploadFile = File(...),
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
 ):
     user = UserCreate(name=name, password=password, email=email, phone=phone, gender=gender)
     user_id = str(uuid4())
@@ -33,11 +35,16 @@ async def create_user(
     session.commit()
     session.refresh(new_user)
 
+    _ = create_user_cognito(user, new_user)
+
     return UserResponse(**new_user.model_dump())
 
 
 @router.get("/", response_model=list[UserResponse])
-def list_users(user: Dict[str, Any] = Depends(login), session: Session = Depends(get_session)):
+def list_users(
+    claims: JWTAuthCredentials = Depends(auth_bearer),
+    session: Session = Depends(get_session),
+):
     users = session.exec(select(User)).all()
     return [UserResponse(**user.model_dump()) for user in users]
 
@@ -58,7 +65,7 @@ async def update_user(
     user_id: str,
     data: UserPatch = Depends(UserPatch.as_form),
     file: UploadFile = File(None),
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
 ):
     user = session.exec(select(User).where(User.id == user_id)).first()
 
