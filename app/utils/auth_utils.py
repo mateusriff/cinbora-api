@@ -95,14 +95,15 @@ def calc_secret(username: str):
 
 def get_jwks():
     try:
-        response = requests.get(get_auth_secrets()["jwks_url"])
+        response = requests.get(get_auth_secrets()["jwk_url"])
         response.raise_for_status()
-        return response.json()
     except requests.RequestException:
         raise HTTPException(
             status_code=500,
             detail=get_auth_error_message(),
         )
+
+    return response.json()
 
 
 def get_public_key(token: str, jwks: JWKS) -> Optional[Dict[str, str]]:
@@ -153,8 +154,11 @@ class AuthBearer(HTTPBearer):
 
     def verify_token(self, jwt_credentials: JWTAuthCredentials) -> bool:
         try:
-            public_key = self.kid_to_jwk[jwt_credentials.header["kid"]]
-        except KeyError:
+            jwks = JWKS.model_validate(get_jwks())
+            kid_to_jwk = {jwk["kid"]: jwk for jwk in jwks.keys}
+            public_key = kid_to_jwk[jwt_credentials.header["kid"]]
+        except KeyError as error:
+            print(error)
             raise HTTPException(
                 status_code=403,
                 detail=get_auth_error_message(),
@@ -183,12 +187,13 @@ class AuthBearer(HTTPBearer):
             try:
                 jwt_credentials = JWTAuthCredentials(
                     jwt_token=jwt_token,
-                    header=jwt.get_unverified_claims(jwt_token),
+                    header=jwt.get_unverified_header(jwt_token),
                     claims=jwt.get_unverified_claims(jwt_token),
                     sig=signature,
                     message=message,
                 )
-            except JWTError:
+            except JWTError as error:
+                print(error)
                 raise HTTPException(
                     status_code=403,
                     detail=get_auth_error_message(),

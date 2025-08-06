@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Any
 
 from pydantic import BaseModel
 
@@ -9,8 +9,8 @@ class JWKS(BaseModel):
 
 class JWTAuthCredentials(BaseModel):
     jwt_token: str
-    header: Dict[str, str]
-    claims: Dict[str, str]
+    header: Dict[str, Any]
+    claims: Dict[str, Any]
     sig: str
     message: str
 

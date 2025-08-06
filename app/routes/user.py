@@ -58,7 +58,10 @@ def list_users(
     session: Session = Depends(get_session),
 ):
     users = session.exec(select(User)).all()
-    return [UserResponse(**user.model_dump()) for user in users]
+    return [
+        UserResponse(**user.model_dump(), username=user.email.lower().split("@")[0])
+        for user in users
+    ]
 
 
 @router.get("/{user_id}")

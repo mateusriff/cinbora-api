@@ -32,7 +32,8 @@ def login(
             AuthParameters=params,
             ClientId=get_auth_secrets()["client_id"],
         )
-        response = UserTokens(**resp)
+        print(resp)
+        response = UserTokens(**resp["AuthenticationResult"])
     except Exception as error:
         print(error)
         return HTTPException(
