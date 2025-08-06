@@ -67,7 +67,6 @@ def upload_user_photo(user_id, file):
         raise HTTPException(status_code=400, detail="Formato de imagem inválido")
 
     filename = f"users/user_{user_id}.png"
-    print(filename)
 
     try:
         contents = file.file.read()

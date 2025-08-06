@@ -50,6 +50,7 @@ class UserResponse(BaseModel):
     """Response model for user data."""
 
     id: str
+    username: str
     name: str
     email: str
     phone: str

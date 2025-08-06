@@ -14,7 +14,6 @@ from jose import JWTError, jwk, jwt
 from jose.exceptions import JOSEError
 from jose.utils import base64url_decode
 
-from app.models.user import User
 from app.types.auth import JWKS, JWTAuthCredentials
 from app.types.user import UserCreate
 
@@ -45,12 +44,17 @@ def get_auth_secrets() -> Dict[str, str]:
     return json.loads(get_secret_value_response["SecretString"])
 
 
-def create_user_cognito(user: UserCreate, db_user: User):
+def create_user_cognito(user: UserCreate) -> str:
     cognito_client = boto3.client("cognito-idp")
     try:
-        cognito_client.admin_create_user(
-            UserPoolId=get_auth_secrets()["user_pool_id"],
-            Username=user.email,
+        username = user.email.lower().split("@")[0]
+        secret_hash = calc_secret(username=username)
+
+        cognito_client.sign_up(
+            ClientId=get_auth_secrets()["client_id"],
+            SecretHash=secret_hash,
+            Username=username,
+            Password=user.password,
             UserAttributes=[
                 {
                     "Name": "phone_number",
@@ -71,11 +75,11 @@ def create_user_cognito(user: UserCreate, db_user: User):
                     "Value": user.email,
                 },
             ],
-            MessageAction="SUPPRESS",
-            DesiredDeliveryMediums=["EMAIL"],
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+    return username
 
 
 def calc_secret(username: str):

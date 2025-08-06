@@ -1,10 +1,7 @@
-import os
-from typing import Any, Dict
-
 import boto3
 from fastapi import APIRouter, Depends, Form, HTTPException
 
-from app.types.auth import JWTAuthCredentials
+from app.types.auth import JWTAuthCredentials, UserTokens, UserConfirm
 from app.utils.auth_utils import (
     auth_bearer,
     calc_secret,
@@ -19,22 +16,52 @@ router = APIRouter()
 def login(
     email: str = Form(...),
     password: str = Form(...),
-) -> Dict[str, Any]:
+):
     try:
-        secret_hash = calc_secret(username=email)
+        username = email.lower().split("@")[0]
+        secret_hash = calc_secret(username=username)
 
         params = {
-            "USERNAME": email,
+            "USERNAME": username,
             "PASSWORD": password,
             "SECRET_HASH": secret_hash,
         }
         cognito_client = boto3.session.Session().client("cognito-idp")
-        response = cognito_client.initiate_auth(
+        resp = cognito_client.initiate_auth(
             AuthFlow="USER_PASSWORD_AUTH",
             AuthParameters=params,
-            Client_id=get_auth_secrets()["client_id"],
+            ClientId=get_auth_secrets()["client_id"],
         )
-    except Exception:
+        response = UserTokens(**resp)
+    except Exception as error:
+        print(error)
+        return HTTPException(
+            status_code=403,
+            detail=get_auth_error_message(),
+        )
+
+    return response
+
+
+@router.post("/verify_email")
+def verify_email(
+    email: str = Form(...),
+    code: str = Form(...),
+):
+    try:
+        username = email.lower().split("@")[0]
+        secret_hash = calc_secret(username=username)
+
+        cognito_client = boto3.session.Session().client("cognito-idp")
+        resp = cognito_client.confirm_sign_up(
+            ClientId=get_auth_secrets()["client_id"],
+            SecretHash=secret_hash,
+            Username=username,
+            ConfirmationCode=code,
+        )
+        response = UserConfirm(**resp)
+    except Exception as error:
+        print(error)
         return HTTPException(
             status_code=403,
             detail=get_auth_error_message(),

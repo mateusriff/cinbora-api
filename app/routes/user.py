@@ -44,12 +44,12 @@ async def create_user(
         session.commit()
         session.refresh(new_user)
 
-        _ = create_user_cognito(user, new_user)
+        username = create_user_cognito(user)
     except Exception as error:
         print(error)
         return error
 
-    return UserResponse(**new_user.model_dump())
+    return UserResponse(**new_user.model_dump(), username=username)
 
 
 @router.get("/", response_model=list[UserResponse])

@@ -13,3 +13,13 @@ class JWTAuthCredentials(BaseModel):
     claims: Dict[str, str]
     sig: str
     message: str
+
+
+class UserTokens(BaseModel):
+    AccessToken: str
+    IdToken: str
+    RefreshToken: str
+
+
+class UserConfirm(BaseModel):
+    Session: str
