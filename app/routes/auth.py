@@ -1,7 +1,7 @@
 import boto3
 from fastapi import APIRouter, Depends, Form, HTTPException
 
-from app.types.auth import JWTAuthCredentials, UserTokens, UserConfirm
+from app.types.auth import JWTAuthCredentials, UserConfirm, UserTokens
 from app.utils.auth_utils import (
     auth_bearer,
     calc_secret,
