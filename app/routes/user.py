@@ -22,22 +22,22 @@ async def create_user(
 
     try:
 
-        response_exist_user = session.query(User).filter(User.email == email).first()
+        response_exist_user = session.query(User).filter(User.email == user.email).first()
 
         if response_exist_user is not None:
             raise HTTPException(status_code=409, detail="Usuário já existe")
 
-        phone = format_phone_number(phone=phone)
+        phone = format_phone_number(phone=user.phone)
         user = UserCreate(
-            name=name,
-            password=password,
-            email=email,
+            name=user.name,
+            password=user.password,
+            email=user.email,
             phone=phone,
-            gender=gender,
+            gender="",
         )
         user_id = str(uuid4())
 
-        new_user = User(**user.model_dump(), photo=url, id=user_id, score=5.0)
+        new_user = User(**user.model_dump(), photo=None, id=user_id, score=5.0)
 
         username = create_user_cognito(user)
 
@@ -47,7 +47,7 @@ async def create_user(
 
     except Exception as error:
         print(error)
-        return error
+        raise HTTPException(status_code=500, detail="Internal server error.")
 
     return UserResponse(**new_user.model_dump(), username=username)
 
