@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, Body
 from sqlmodel import Session, select
 
 from app.database import get_session
@@ -16,12 +16,7 @@ router = APIRouter()
 
 @router.post("/")
 async def create_user(
-    name: str = Form(...),
-    password: str = Form(...),
-    email: str = Form(...),
-    phone: str = Form(...),
-    gender: str = Form(None),
-    file: UploadFile = File(None),
+    user: UserCreate = Body(...),
     session: Session = Depends(get_session),
 ):
 
@@ -30,7 +25,7 @@ async def create_user(
         response_exist_user = session.query(User).filter(User.email == email).first()
 
         if response_exist_user is not None:
-            raise HTTPException(status_code=500, detail="Usuário já existe")
+            raise HTTPException(status_code=409, detail="Usuário já existe")
 
         phone = format_phone_number(phone=phone)
         user = UserCreate(
@@ -41,8 +36,6 @@ async def create_user(
             gender=gender,
         )
         user_id = str(uuid4())
-
-        url = upload_user_photo(user_id, file)
 
         new_user = User(**user.model_dump(), photo=url, id=user_id, score=5.0)
 

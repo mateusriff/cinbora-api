@@ -43,7 +43,7 @@ class UserCreate(BaseModel):
     password: str
     email: str
     phone: str
-    gender: str
+    gender: Optional[str] = None
 
 
 class UserResponse(BaseModel):
