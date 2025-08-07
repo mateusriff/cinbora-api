@@ -1,5 +1,5 @@
 import boto3
-from fastapi import APIRouter, Depends, Form, HTTPException
+from fastapi import APIRouter, Depends, Form, HTTPException, Query
 
 from app.types.auth import JWTAuthCredentials, UserConfirm, UserTokens
 from app.utils.auth_utils import (
@@ -14,8 +14,8 @@ router = APIRouter()
 
 @router.post("/login")
 def login(
-    email: str = Form(...),
-    password: str = Form(...),
+    email: str = Query(...),
+    password: str = Query(...),
 ):
     try:
         username = email.lower().split("@")[0]
@@ -46,8 +46,8 @@ def login(
 
 @router.post("/verify_email")
 def verify_email(
-    email: str = Form(...),
-    code: str = Form(...),
+    email: str = Query(...),
+    code: str = Query(...),
 ):
     try:
         username = email.lower().split("@")[0]
@@ -87,8 +87,8 @@ def logout(claims: JWTAuthCredentials = Depends(auth_bearer)):
 
 @router.patch("/change_password")
 def change_password(
-    old_password: str = Form(...),
-    new_password: str = Form(...),
+    old_password: str = Query(...),
+    new_password: str = Query(...),
     claims: JWTAuthCredentials = Depends(auth_bearer),
 ):
     try:
