@@ -27,7 +27,7 @@ async def create_user(
 
     try:
 
-        response_exist_user = session.exec(User).filter(User.email == email).first()
+        response_exist_user = session.query(User).filter(User.email == email).first()
 
         if response_exist_user is not None:
             raise HTTPException(status_code=500, detail="Usuário já existe")
