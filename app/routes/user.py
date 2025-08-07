@@ -65,7 +65,11 @@ def list_users(
 
 
 @router.get("/{user_id}")
-def get_user(user_id: str, session: Session = Depends(get_session)):
+def get_user(
+    user_id: str,
+    claims: JWTAuthCredentials = Depends(auth_bearer),
+    session: Session = Depends(get_session),
+):
 
     user = session.exec(select(User).where(User.id == user_id)).first()
 
@@ -80,6 +84,7 @@ async def update_user(
     user_id: str,
     data: UserPatch = Depends(UserPatch.as_form),
     file: UploadFile = File(None),
+    claims: JWTAuthCredentials = Depends(auth_bearer),
     session: Session = Depends(get_session),
 ):
     user = session.exec(select(User).where(User.id == user_id)).first()
@@ -104,7 +109,11 @@ async def update_user(
 
 
 @router.delete("/{user_id}")
-def delete_user(user_id: str, session: Session = Depends(get_session)):
+def delete_user(
+    user_id: str,
+    claims: JWTAuthCredentials = Depends(auth_bearer),
+    session: Session = Depends(get_session),
+):
 
     user = session.exec(select(User).where(User.id == user_id)).first()
 

@@ -6,14 +6,21 @@ from sqlmodel import Session, select
 from app.database import get_session
 from app.models.travel import Travel
 from app.models.user import User
+from app.types.auth import JWTAuthCredentials
 from app.types.travel import TravelCreate, TravelPatch, TravelResponse
+from app.utils.auth_utils import auth_bearer
 from app.utils.utils import haversine_distance
 
-router = APIRouter()
+router = APIRouter(
+    dependencies=[Depends(auth_bearer)],
+)
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def create_travel(travel: TravelCreate, session: Session = Depends(get_session)):
+def create_travel(
+    travel: TravelCreate,
+    session: Session = Depends(get_session),
+):
 
     new_travel = Travel(**travel.model_dump(), id=str(uuid4()))
 
