@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Annotated, Any, Dict
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
@@ -22,10 +21,17 @@ async def create_user(
     email: str = Form(...),
     phone: str = Form(...),
     gender: str = Form(None),
-    file: UploadFile = File(...),
+    file: UploadFile = File(None),
     session: Session = Depends(get_session),
 ):
+
     try:
+
+        response_exist_user = session.exec(User).filter(User.email == email).first()
+
+        if response_exist_user is not None:
+            raise HTTPException(status_code=500, detail="Usuário já existe")
+
         phone = format_phone_number(phone=phone)
         user = UserCreate(
             name=name,
@@ -40,11 +46,12 @@ async def create_user(
 
         new_user = User(**user.model_dump(), photo=url, id=user_id, score=5.0)
 
+        username = create_user_cognito(user)
+
         session.add(new_user)
         session.commit()
         session.refresh(new_user)
 
-        username = create_user_cognito(user)
     except Exception as error:
         print(error)
         return error

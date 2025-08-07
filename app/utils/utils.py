@@ -66,6 +66,9 @@ def upload_user_photo(user_id, file):
     if file.content_type not in ["image/png", "image/jpeg"]:
         raise HTTPException(status_code=400, detail="Formato de imagem inválido")
 
+    if file is None:
+        return f"https://{BUCKET_NAME}.s3.{REGION_NAME}.amazonaws.com/default"
+
     filename = f"users/user_{user_id}.png"
 
     try:
@@ -78,12 +81,13 @@ def upload_user_photo(user_id, file):
         )
 
         url = f"https://{BUCKET_NAME}.s3.{REGION_NAME}.amazonaws.com/{filename}"
-        return url
 
     except NoCredentialsError:
         raise HTTPException(status_code=403, detail="Credenciais da AWS não encontradas")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao fazer upload: {str(e)}")
+
+    return url
 
 
 def delete_user_photo(user_id: str):
