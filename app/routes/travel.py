@@ -36,7 +36,7 @@ def create_travel(
     return response
 
 
-@router.get("/", response_model=list[TravelResponse])
+@router.get("/", response_model=list[dict])  # raw dict for now
 def list_travels(
     origin_latitude: float,
     origin_longitude: float,
@@ -45,41 +45,32 @@ def list_travels(
     radius: int,
     session: Session = Depends(get_session),
 ):
-
-    if not origin_latitude and not origin_longitude:
+    if origin_latitude is None or origin_longitude is None:
         raise HTTPException(status_code=400, detail="Both origin latitude and longitude required")
+    if destination_latitude is None or destination_longitude is None:
+        raise HTTPException(status_code=400, detail="Both destination latitude and longitude required")
 
-    if not destination_latitude and not destination_longitude:
-        raise HTTPException(status_code=400, detail="Both latitude and longitude required")
+    stmt = select(Travel, User).join(User, Travel.id_driver == User.id)
+    results = session.exec(stmt).all()
 
-    travels = session.exec(select(Travel)).all()
+    filtered_results = []
+    for travel, user in results:
+        if (
+            haversine_distance(
+                (travel.origin["longitude"], travel.origin["latitude"]),
+                (origin_longitude, origin_latitude),
+            ) <= radius
+            and haversine_distance(
+                (travel.destination["longitude"], travel.destination["latitude"]),
+                (destination_longitude, destination_latitude),
+            ) <= radius
+        ):
+            travel_data = travel.model_dump()  # your Travel data as dict
+            travel_data["driver_name"] = user.name
+            travel_data["driver_phone"] = user.phone
+            filtered_results.append(travel_data)
 
-    if (
-        origin_latitude is None
-        and origin_longitude is None
-        and destination_latitude is None
-        and destination_longitude is None
-    ):
-        return [TravelResponse(**travel.model_dump()) for travel in travels]
-
-    travels = session.exec(select(Travel)).all()
-
-    filtered_travels = [
-        travel
-        for travel in travels
-        if haversine_distance(
-            (travel.origin["longitude"], travel.origin["latitude"]),
-            (origin_longitude, origin_latitude),
-        )
-        <= radius
-        and haversine_distance(
-            (travel.destination["longitude"], travel.destination["latitude"]),
-            (destination_longitude, destination_latitude),
-        )
-        <= radius
-    ]
-
-    return filtered_travels
+    return filtered_results
 
 
 @router.get("/{travel_id}")
