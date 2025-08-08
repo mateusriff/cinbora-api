@@ -1,7 +1,10 @@
 import boto3
 from fastapi import APIRouter, Depends, Form, HTTPException, Query
+from sqlmodel import Session, select
+from app.database import get_session
 
 from app.types.auth import JWTAuthCredentials, UserConfirm, UserTokens
+from app.models.user import User
 from app.utils.auth_utils import (
     auth_bearer,
     calc_secret,
@@ -16,9 +19,16 @@ router = APIRouter()
 def login(
     email: str = Query(...),
     password: str = Query(...),
+    session: Session = Depends(get_session),
 ):
     try:
         username = email.lower().split("@")[0]
+
+        user = session.exec(select(User).where(User.email == email)).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        user_id = user.id
+
         secret_hash = calc_secret(username=username)
 
         params = {
@@ -33,7 +43,7 @@ def login(
             ClientId=get_auth_secrets()["client_id"],
         )
         print(resp)
-        response = UserTokens(**resp["AuthenticationResult"])
+        response = {**UserTokens(**resp["AuthenticationResult"]).model_dump(), "user_id": user_id}
     except Exception as error:
         print(error)
         return HTTPException(
