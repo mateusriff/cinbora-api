@@ -5,6 +5,12 @@ coverage==7.9.2
 pytest-cov==6.2.1
 starlette==0.46.2
 starlette-prometheus==0.10.0
+sqlmodel==0.0.24
+psycopg2-binary==2.9.10
+alembic==1.12.1
+python-jose==3.5.0
+boto3==1.39.4
+requests==2.32.4
+sqlmodel==0.0.24
 pre-commit
 ruff
-alembic==1.16.3
