@@ -48,7 +48,9 @@ def list_travels(
     if origin_latitude is None or origin_longitude is None:
         raise HTTPException(status_code=400, detail="Both origin latitude and longitude required")
     if destination_latitude is None or destination_longitude is None:
-        raise HTTPException(status_code=400, detail="Both destination latitude and longitude required")
+        raise HTTPException(
+            status_code=400, detail="Both destination latitude and longitude required"
+        )
 
     stmt = select(Travel, User).join(User, Travel.id_driver == User.id)
     results = session.exec(stmt).all()
@@ -59,11 +61,13 @@ def list_travels(
             haversine_distance(
                 (travel.origin["longitude"], travel.origin["latitude"]),
                 (origin_longitude, origin_latitude),
-            ) <= radius
+            )
+            <= radius
             and haversine_distance(
                 (travel.destination["longitude"], travel.destination["latitude"]),
                 (destination_longitude, destination_latitude),
-            ) <= radius
+            )
+            <= radius
         ):
             travel_data = travel.model_dump()  # your Travel data as dict
             travel_data["driver_name"] = user.name
